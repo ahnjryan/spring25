@@ -1,0 +1,9 @@
+{
+    "name": "socket-chat",
+    "version": "0.0.2",
+    "description": "added name, timestamps, and rooms to chat",
+    "dependencies": {
+        "express": "^4.21.2",
+        "socket.io": "^4.8.1"
+    }
+}
