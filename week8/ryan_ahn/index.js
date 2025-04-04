@@ -16,7 +16,7 @@ const messageSchema = new Schema({
   timestamp: { type: Date, default: Date.now }
 });
 
-const messageModel = mongoose.model("Message", messageSchema);
+const messageModel = mongoose.model("message", messageSchema);
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
@@ -27,14 +27,21 @@ io.on('connection', (socket) => {
     console.log("messages: " + message);
   })
 
-  socket.on('join room', ({ name, room }) => {
+  socket.on('join room', async ({ name, room }) => {
     socket.name = name || 'Anonymous';
     socket.room = room || 'lobby';
     socket.join(socket.room);
 
+    try {
+      const messages = await messageModel.find({ room: socket.room }).sort({ timestamp: 1 });
+      socket.emit('chat history', messages);
+    } catch (err) {
+      console.error("Error retrieving messages:", err);
+    }
+
     socket.to(socket.room).emit('chat message', {
       name: 'System',
-      text: socket.name + ' has joined the room.',
+      text: `${socket.name} has joined the room.`,
       timestamp: new Date().toLocaleDateString()
     });
   });
@@ -61,10 +68,10 @@ io.on('connection', (socket) => {
 });
 
 server.listen(3000, async function () {
-  await mongoose.connect("mongodb+srv://ryanahn:v2ctHxdkStA1AoyA@cluster0.fb1cx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0");
+  await mongoose.connect("mongodb+srv://ryanahn:Qh9co7zXGFAumU2W@cluster0.mvzfkf7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0");
   console.log('listening on *:3000');
 });
 
 app.get('/messages', async function(req, res) {
-  res.join(await messageModel.find());
+  res.json(await messageModel.find());
 });
